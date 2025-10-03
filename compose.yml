@@ -1,0 +1,9 @@
+name: f-klubben-infra
+services:
+  caddy:
+    build:
+      context: caddy
+    ports:
+      - "8080:80"
+    environment:
+      - "DOMAIN=fklub.localhost"

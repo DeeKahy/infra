@@ -1,0 +1,4 @@
+services:
+  caddy:
+    environment:
+      - DOMAIN=staging.fklub.dk

@@ -1,4 +1,4 @@
 services:
   caddy:
     environment:
-      - DOMAIN=staging.fklub.dk
+      - DOMAIN=fklub.dk

@@ -1,3 +1,3 @@
-hello.{$DOMAIN}:80 {
+hello.staging.{$DOMAIN}:80 {
 	respond "Hello, World!"
 }

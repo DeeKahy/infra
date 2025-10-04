@@ -5,5 +5,11 @@ services:
       context: caddy
     ports:
       - "8080:80"
+    volumes:
+      - /var/www:/www:rw
+
+      # The container can't access symlinks to files outside of its volumes. This bypasses the symlinks entirely.
+      - /home/coffee/jvm/generator/html:/www/coffee:ro
+      - /data/gamlewebsites/wwwstatic:/www/wwwstatic:ro
     environment:
       - "DOMAIN=fklub.localhost"

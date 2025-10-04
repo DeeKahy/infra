@@ -1,3 +1,57 @@
+bread.{$DOMAIN}:80 {
+	root * /www/bread
+	file_server
+}
+
+coffee.{$DOMAIN}:80 {
+	root * /www/coffee
+	file_server
+}
+
+docs.{$DOMAIN}:80 {
+	root * /www/docs.fklub.dk
+	file_server
+}
+
+facking.{$DOMAIN}:80 {
+	root * /www/facking
+	file_server
+}
+
+fapp.{$DOMAIN}:80, app.{$DOMAIN}:80 {
+	redir https://fappen.{$DOMAIN}
+}
+
+fappen.{$DOMAIN}:80 {
+	root * /www/fappen.fklub.dk
+	file_server
+}
+
+fritfit.{$DOMAIN}:80 {
+	root * /www/fritfit.fklub.dk
+	file_server
+}
+
 hello.staging.{$DOMAIN}:80 {
 	respond "Hello, World!"
+}
+
+messe.{$DOMAIN}:80 {
+	root * /www/messe
+	file_server
+}
+
+okboomer.{$DOMAIN}:80 {
+	root * /www/okboomer
+	file_server
+}
+
+static.{$DOMAIN}:80 {
+	root * /www/wwwstatic
+	file_server
+}
+
+test.{$DOMAIN}:80 {
+	root * /www/test
+	file_server
 }

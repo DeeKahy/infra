@@ -51,6 +51,11 @@ static.{$DOMAIN}:80 {
 	file_server
 }
 
+api.stregsystem.{$DOMAIN}:80 {
+	root * /www/api.stregsystem.fklub.dk
+	file_server
+}
+
 test.{$DOMAIN}:80 {
 	root * /www/test
 	file_server

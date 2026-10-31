@@ -90,11 +90,17 @@ http://hello.staging.fklub.dk {
 	respond "Hello, World!"
 }
 
-# These two move to /srv when their own projects move.
 http://coffee.fklub.dk {
-	import static /home/coffee/jvm/generator/html
+	import static /srv/coffee/generator/html
 }
 
+# Apache keeps the IP allowlist for this one.
+http://random.fklub.dk {
+	reverse_proxy 127.0.0.1:8092
+	log
+}
+
+# This moves to /srv when Stregsystem moves.
 http://api.stregsystem.fklub.dk {
 	import static /data/stregsystem/openapi/out
 }

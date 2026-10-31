@@ -1,0 +1,12 @@
+services:
+  random:
+    image: php:8.5.12-apache
+    container_name: random
+    restart: unless-stopped
+    # Stay on the default bridge. A new network could pick a subnet that clashes with the AAU network.
+    network_mode: bridge
+    ports:
+      - "127.0.0.1:8092:80"
+    volumes:
+      - /srv/random:/var/www/html:ro
+      - ./php.ini:/usr/local/etc/php/conf.d/local.ini:ro

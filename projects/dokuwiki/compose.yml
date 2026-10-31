@@ -1,0 +1,15 @@
+services:
+  dokuwiki:
+    image: lscr.io/linuxserver/dokuwiki:version-2026-07-14c
+    container_name: dokuwiki
+    restart: unless-stopped
+    # Stay on the default bridge. A new network could pick a subnet that clashes with the AAU network.
+    network_mode: bridge
+    ports:
+      - "127.0.0.1:8090:80"
+    environment:
+      - PUID=999
+      - PGID=999
+      - TZ=Europe/Copenhagen
+    volumes:
+      - /srv/dokuwiki/config:/config

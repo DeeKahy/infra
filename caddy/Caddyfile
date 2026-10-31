@@ -1,62 +1,100 @@
-bread.{$DOMAIN}:80 {
-	root * /www/bread
-	file_server
+# Apache handles TLS and proxies these hostnames to 127.0.0.1:8080.
+# Caddy only speaks plain HTTP on localhost until it takes over 80/443.
+{
+	auto_https off
+	http_port {$CADDY_PORT:8080}
+	default_bind 127.0.0.1
+	servers {
+		# Apache is in front, so believe what it says about the visitor.
+		trusted_proxies static 127.0.0.1/32 ::1
+	}
 }
 
-coffee.{$DOMAIN}:80 {
-	root * /www/coffee
-	file_server
+(static) {
+	root * {args[0]}
+	file_server {
+		hide .git .gitignore .idea
+	}
+	log
 }
 
-docs.{$DOMAIN}:80 {
-	root * /www/docs.fklub.dk
-	file_server
+# The wiki. The bare http:// also catches unknown hostnames, as Apache's default vhost did.
+http://fklub.dk, http://www.fklub.dk, http://fff.fklub.dk, http://fklub.cs.aau.dk, http:// {
+	redir /ical/fember.ics https://calendar.google.com/calendar/ical/fke9k8sbuqttoif5ff7ccbb0bc%40group.calendar.google.com/public/basic.ics
+	redir /ical/frivillig.ics https://calendar.google.com/calendar/ical/57a0e9bcc00b07d48d08d1aaa8c26f9c8345f96fdf8849f444251f417af9284e%40group.calendar.google.com/public/basic.ics
+
+	@booking path /bookaau /bookaau/* /aaubooking /aaubooking/*
+	redir @booking https://forms.office.com/pages/responsepage.aspx?id=Sbrb9QbOb0msPgzxQ2HZNMFGXdYJ2NRJiGVt0NKQxHFUMUNGVVpFQjFTNTBDSkdNVlE4TUdHSksxOSQlQCN0PWcu&route=shorturl
+
+	@adsl path /adsl /adsl/*
+	redir @adsl https://www.aauvalg.aau.dk/sadan-stemmer-du#log-ind-i-e-valgsystemet-for-at-stemme
+
+	@fappen2 path /fappen2 /fappen2/*
+	redir @fappen2 https://refactor-rework-song-build-s.fappen.pages.dev
+
+	# Moved as they were from Apache. Going by the names, these reach two Stregsystem Pis.
+	handle_path /erstregsystemetspinede* {
+		reverse_proxy 172.25.11.72:8000
+	}
+	handle_path /erstregsystemetspiikantinennede* {
+		reverse_proxy 172.25.11.74:8000
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:8090
+	}
+	log
 }
 
-facking.{$DOMAIN}:80 {
-	root * /www/facking
-	file_server
+http://bread.fklub.dk {
+	import static /srv/static/bread
 }
 
-fapp.{$DOMAIN}:80, app.{$DOMAIN}:80 {
-	redir https://fappen.{$DOMAIN}
+http://docs.fklub.dk {
+	import static /srv/static/docs
 }
 
-fappen.{$DOMAIN}:80 {
-	root * /www/fappen.fklub.dk
-	file_server
+http://facking.fklub.dk {
+	import static /srv/static/facking
 }
 
-fritfit.{$DOMAIN}:80 {
-	root * /www/fritfit.fklub.dk
-	file_server
+http://fappen.fklub.dk {
+	import static /srv/static/fappen
 }
 
-hello.staging.{$DOMAIN}:80 {
+http://fritfit.fklub.dk {
+	import static /srv/static/fritfit
+}
+
+http://messe.fklub.dk {
+	import static /srv/static/messe
+}
+
+http://okboomer.fklub.dk {
+	import static /srv/static/okboomer
+}
+
+http://static.fklub.dk {
+	import static /srv/static/static
+}
+
+http://test.fklub.dk {
+	import static /srv/static/test
+}
+
+http://fapp.fklub.dk, http://app.fklub.dk {
+	redir https://fappen.fklub.dk
+}
+
+http://hello.staging.fklub.dk {
 	respond "Hello, World!"
 }
 
-messe.{$DOMAIN}:80 {
-	root * /www/messe
-	file_server
+# These two move to /srv when their own projects move.
+http://coffee.fklub.dk {
+	import static /home/coffee/jvm/generator/html
 }
 
-okboomer.{$DOMAIN}:80 {
-	root * /www/okboomer
-	file_server
-}
-
-static.{$DOMAIN}:80 {
-	root * /www/wwwstatic
-	file_server
-}
-
-api.stregsystem.{$DOMAIN}:80 {
-	root * /www/api.stregsystem.fklub.dk
-	file_server
-}
-
-test.{$DOMAIN}:80 {
-	root * /www/test
-	file_server
+http://api.stregsystem.fklub.dk {
+	import static /data/stregsystem/openapi/out
 }

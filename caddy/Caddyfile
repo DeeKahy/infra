@@ -132,7 +132,12 @@ http://stregsystem.fklub.dk {
 	}
 
 	handle {
-		respond 403
+		header Content-Type "text/plain; charset=utf-8"
+		respond "Stregsystemet kan kun bruges fra AAU-netværket eller VPN.
+Hvis du er på AAU-netværket med en iPhone, så slå Privat relæ fra.
+
+Stregsystemet can only be used from the AAU network or the VPN.
+If you are on the AAU network with an iPhone, turn off Private Relay." 403
 	}
 }
 

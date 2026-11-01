@@ -1,0 +1,20 @@
+services:
+  phpmyadmin:
+    image: phpmyadmin:5.2.3-apache
+    container_name: phpmyadmin
+    restart: unless-stopped
+    # Stay on the default bridge. A new network could pick a subnet that clashes with the AAU network.
+    network_mode: bridge
+    ports:
+      - "127.0.0.1:8091:80"
+    environment:
+      - PMA_HOST=localhost
+      - PMA_SOCKET=/var/run/mysqld/mysqld.sock
+      - PMA_ABSOLUTE_URI=https://lists.fklub.dk/phpmyadmin/
+      - UPLOAD_LIMIT=64M
+      - HIDE_PHP_VERSION=true
+    volumes:
+      # MySQL only listens locally, so it is reached through its socket. Logins are normal MySQL accounts.
+      - /var/run/mysqld:/var/run/mysqld
+      - ./php.ini:/usr/local/etc/php/conf.d/local.ini:ro
+      - ./config.user.inc.php:/etc/phpmyadmin/config.user.inc.php:ro

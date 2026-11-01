@@ -147,6 +147,23 @@ If you need access, talk to someone responsible to get a login." 401
 	}
 }
 
+# Apache only sends /phpmyadmin here. Everything else on this hostname is still Mailman in Apache.
+http://lists.fklub.dk {
+	import uni_network
+	redir /phpmyadmin /phpmyadmin/ 308
+	handle_path /phpmyadmin/* {
+		handle @uni_network {
+			reverse_proxy 127.0.0.1:8091
+		}
+		handle {
+			import denied
+		}
+	}
+	handle {
+		respond 404
+	}
+}
+
 # The allowlist is outside this repo, because it lists people's homes. See the README.
 http://stregsystem.fklub.dk {
 	import /etc/caddy/stregsystem-allowlist.caddy

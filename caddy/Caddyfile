@@ -19,15 +19,49 @@
 	@uni_network client_ip 10.0.0.0/8 172.16.0.0/12 130.225.192.0/21 130.225.48.0/20 192.38.48.0/20 2001:878:300::/44
 }
 
-(denied) {
-	header Content-Type "text/plain; charset=utf-8"
-	respond "Denne side kan kun bruges fra AAU-netværket eller VPN.
+# Everyone outside the network logs in with an account from /etc/caddy/users.caddy, which is outside this repo.
+(login) {
+	basic_auth bcrypt "F-klubben" {
+		import /etc/caddy/users.caddy
+	}
+}
+
+(login_message) {
+	handle_errors 401 {
+		header Content-Type "text/plain; charset=utf-8"
+		respond "Denne side kræver et login uden for AAU-netværket og VPN.
+Hvis du har brug for adgang, så tal med en ansvarlig for at få et login.
 Hvis du er på AAU-netværket med en iPhone, så slå Privat relæ fra.
 Hvis noget andet er i stykker, så få fat i Lennart (Deekahy) og fortæl ham, hvad han har fucket op.
 
-This page can only be used from the AAU network or the VPN.
+This page needs a login outside the AAU network and the VPN.
+If you need access, talk to someone responsible to get a login.
 If you are on the AAU network with an iPhone, turn off Private Relay.
-If something else is broken, get ahold of Lennart (Deekahy) and tell him what he fucked up." 403
+If something else is broken, get ahold of Lennart (Deekahy) and tell him what he fucked up." 401
+	}
+}
+
+(stregsystem_site) {
+	# Closed rooms go to the main room. To open one for an occasion, remove it from this list.
+	@closed_rooms path_regexp ^/(1|2|3|5|6|7|8|9|11|15|16)(/.*)?$
+	redir @closed_rooms /10/
+
+	handle_path /static/* {
+		root * /data/stregsystem/static
+		file_server
+	}
+	handle_path /media/* {
+		root * /data/stregsystem/media
+		# Kiosk images change, so browsers must not cache them.
+		@images path *.png *.jpg
+		header @images Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
+		file_server {
+			hide .htaccess
+		}
+	}
+	handle {
+		reverse_proxy unix//run/stregsystem.sock
+	}
 }
 
 (static) {
@@ -116,47 +150,41 @@ http://coffee.fklub.dk {
 
 http://random.fklub.dk {
 	import uni_network
+	import login_message
 	handle @uni_network {
 		reverse_proxy 127.0.0.1:8092
 	}
 	handle {
-		import denied
+		import login
+		reverse_proxy 127.0.0.1:8092
 	}
 }
 
 # No login on the university network or VPN, because random and the info screens need the gallery.
-# Everyone else needs the login. The password hash is outside this repo.
 http://farcheology.fklub.dk {
 	import uni_network
+	import login_message
 	handle @uni_network {
 		reverse_proxy 127.0.0.1:8093
 	}
 	handle {
-		basic_auth bcrypt "Farcheology" {
-			import /etc/caddy/farcheology-users.caddy
-		}
+		import login
 		reverse_proxy 127.0.0.1:8093
-	}
-	handle_errors 401 {
-		header Content-Type "text/plain; charset=utf-8"
-		respond "Farcheology kræver et login uden for AAU-netværket og VPN.
-Hvis du har brug for adgang, så tal med en ansvarlig for at få et login.
-
-Farcheology needs a login outside the AAU network and the VPN.
-If you need access, talk to someone responsible to get a login." 401
 	}
 }
 
 # Apache only sends /phpmyadmin here. Everything else on this hostname is still Mailman in Apache.
 http://lists.fklub.dk {
 	import uni_network
+	import login_message
 	redir /phpmyadmin /phpmyadmin/ 308
 	handle_path /phpmyadmin/* {
 		handle @uni_network {
 			reverse_proxy 127.0.0.1:8091
 		}
 		handle {
-			import denied
+			import login
+			reverse_proxy 127.0.0.1:8091
 		}
 	}
 	handle {
@@ -164,35 +192,19 @@ http://lists.fklub.dk {
 	}
 }
 
-# The allowlist is outside this repo, because it lists people's homes. See the README.
+# The allowlist is outside this repo, because it lists people's homes.
+# It might get completely removed in favour of a login. See the README.
 http://stregsystem.fklub.dk {
 	import /etc/caddy/stregsystem-allowlist.caddy
+	import login_message
 
 	handle @stregsystem_allowed {
-		# Closed rooms go to the main room. To open one for an occasion, remove it from this list.
-		@closed_rooms path_regexp ^/(1|2|3|5|6|7|8|9|11|15|16)(/.*)?$
-		redir @closed_rooms /10/
-
-		handle_path /static/* {
-			root * /data/stregsystem/static
-			file_server
-		}
-		handle_path /media/* {
-			root * /data/stregsystem/media
-			# Kiosk images change, so browsers must not cache them.
-			@images path *.png *.jpg
-			header @images Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
-			file_server {
-				hide .htaccess
-			}
-		}
-		handle {
-			reverse_proxy unix//run/stregsystem.sock
-		}
+		import stregsystem_site
 	}
 
 	handle {
-		import denied
+		import login
+		import stregsystem_site
 	}
 }
 

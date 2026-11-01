@@ -44,21 +44,15 @@ caddy validate --config /srv/infra/caddy/Caddyfile --adapter caddyfile
 sudo systemctl reload caddy
 ```
 
-## Stregsystem access
+## Access from outside
 
-Stregsystem is only open to the university network and the VPN. The list is in `/etc/caddy/stregsystem-allowlist.caddy`, outside this repo, because it also lists people's homes.
+Stregsystem, Farcheology, `random` and phpMyAdmin need no login on the university network or the VPN. Everyone else gets a login from `/etc/caddy/users.caddy`, which is outside this repo.
 
-To let an address in, uncomment or add its `client_ip` line, then run `sudo systemctl reload caddy`.
+The wiki, the small static sites and Mailman are public.
 
-`random` and Piwigo use the shared `uni_network` rule in `caddy/Caddyfile`, which has no home addresses.
+Stregsystem also has an allowlist in `/etc/caddy/stregsystem-allowlist.caddy`, outside this repo because it lists people's homes. To skip the login for an address, uncomment or add its `client_ip` line, then run `sudo systemctl reload caddy`.
 
-Closed rooms are listed in the Stregsystem block in `caddy/Caddyfile`. To open one for an occasion, remove it from that list and reload Caddy.
-
-## Piwigo access
-
-Piwigo needs no login on the university network or the VPN. Everyone else gets a login, and the hash is in `/etc/caddy/farcheology-users.caddy`, outside this repo.
-
-To change the password, run `caddy hash-password`, replace the hash in that file, then run `sudo systemctl reload caddy`.
+Closed rooms are listed in `stregsystem_site` in `caddy/Caddyfile`. To open one for an occasion, remove it from that list and reload Caddy.
 
 ## Add a static site
 

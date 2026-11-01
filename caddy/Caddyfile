@@ -1,16 +1,22 @@
-# Apache handles TLS and proxies these hostnames to 127.0.0.1:8080.
-# Caddy only speaks plain HTTP on localhost until it takes over 80/443.
+# Caddy handles TLS and certificates for every site. Mailman is the only thing still in Apache, on 127.0.0.1:8888.
 {
-	auto_https off
-	http_port {$CADDY_PORT:8080}
-	default_bind 127.0.0.1
+	email fit@fklub.dk
 	# Only Caddy and root can open this socket, so other local users cannot change the config.
 	admin unix//run/caddy/admin.sock
 	servers {
-		# Apache is in front, so believe what it says about the visitor.
-		trusted_proxies static 127.0.0.1/32 ::1
-		# Use the address Apache adds, not one the visitor made up. Stregsystem allowlist depends on this.
-		trusted_proxies_strict
+		# ufw does not allow UDP 443, so do not advertise HTTP/3.
+		protocols h1 h2
+	}
+}
+
+# Compression and access logs for every site. Logs are kept 14 days, as Apache's were.
+(site) {
+	encode zstd gzip
+	log {
+		output file /var/log/caddy/access.log {
+			roll_size 100MiB
+			roll_keep_for 336h
+		}
 	}
 }
 
@@ -65,15 +71,21 @@ If something else is broken, get ahold of Lennart (Deekahy) and tell him what he
 }
 
 (static) {
+	import site
 	root * {args[0]}
 	file_server {
 		hide .git .gitignore .idea
 	}
-	log
 }
 
-# The wiki. The bare http:// also catches unknown hostnames, as Apache's default vhost did.
-http://fklub.dk, http://www.fklub.dk, http://fff.fklub.dk, http://fklub.cs.aau.dk, http:// {
+# Unknown hostnames on port 80 go to the wiki. There is no certificate for them on 443.
+http:// {
+	redir https://fklub.dk{uri} permanent
+}
+
+# staging.fklub.dk has no site of its own. It reached the wiki through Apache's catch-all, so it stays here for now.
+fklub.dk, www.fklub.dk, fff.fklub.dk, fklub.cs.aau.dk, staging.fklub.dk {
+	import site
 	redir /ical/fember.ics https://calendar.google.com/calendar/ical/fke9k8sbuqttoif5ff7ccbb0bc%40group.calendar.google.com/public/basic.ics
 	redir /ical/frivillig.ics https://calendar.google.com/calendar/ical/57a0e9bcc00b07d48d08d1aaa8c26f9c8345f96fdf8849f444251f417af9284e%40group.calendar.google.com/public/basic.ics
 
@@ -97,58 +109,60 @@ http://fklub.dk, http://www.fklub.dk, http://fff.fklub.dk, http://fklub.cs.aau.d
 	handle {
 		reverse_proxy 127.0.0.1:8090
 	}
-	log
 }
 
-http://bread.fklub.dk {
+bread.fklub.dk {
 	import static /srv/static/bread
 }
 
-http://docs.fklub.dk {
+docs.fklub.dk {
 	import static /srv/static/docs
 }
 
-http://facking.fklub.dk {
+facking.fklub.dk {
 	import static /srv/static/facking
 }
 
-http://fappen.fklub.dk {
+fappen.fklub.dk {
 	import static /srv/static/fappen
 }
 
-http://fritfit.fklub.dk {
+fritfit.fklub.dk {
 	import static /srv/static/fritfit
 }
 
-http://messe.fklub.dk {
+messe.fklub.dk {
 	import static /srv/static/messe
 }
 
-http://okboomer.fklub.dk {
+okboomer.fklub.dk {
 	import static /srv/static/okboomer
 }
 
-http://static.fklub.dk {
+static.fklub.dk {
 	import static /srv/static/static
 }
 
-http://test.fklub.dk {
+test.fklub.dk {
 	import static /srv/static/test
 }
 
-http://fapp.fklub.dk, http://app.fklub.dk {
+fapp.fklub.dk, app.fklub.dk {
+	import site
 	redir https://fappen.fklub.dk
 }
 
-http://hello.staging.fklub.dk {
+hello.staging.fklub.dk {
+	import site
 	respond "Hello, World!"
 }
 
-http://coffee.fklub.dk {
+coffee.fklub.dk {
 	import static /srv/coffee/generator/html
 }
 
-http://random.fklub.dk {
+random.fklub.dk {
+	import site
 	import uni_network
 	import login_message
 	handle @uni_network {
@@ -161,7 +175,8 @@ http://random.fklub.dk {
 }
 
 # No login on the university network or VPN, because random and the info screens need the gallery.
-http://farcheology.fklub.dk {
+farcheology.fklub.dk {
+	import site
 	import uni_network
 	import login_message
 	handle @uni_network {
@@ -173,8 +188,22 @@ http://farcheology.fklub.dk {
 	}
 }
 
-# Apache only sends /phpmyadmin here. Everything else on this hostname is still Mailman in Apache.
+# listadmin on this server uses http://, and does not follow redirects. /etc/hosts points this
+# hostname at 127.0.0.1, so its traffic stays on this machine. Everyone else goes to HTTPS.
 http://lists.fklub.dk {
+	import site
+	@this_server client_ip 127.0.0.1/32
+	handle @this_server {
+		reverse_proxy 127.0.0.1:8888
+	}
+	handle {
+		redir https://{host}{uri} 308
+	}
+}
+
+# Everything but phpMyAdmin on this hostname is Mailman, still in Apache on 127.0.0.1:8888.
+lists.fklub.dk {
+	import site
 	import uni_network
 	import login_message
 	redir /phpmyadmin /phpmyadmin/ 308
@@ -187,14 +216,21 @@ http://lists.fklub.dk {
 			reverse_proxy 127.0.0.1:8091
 		}
 	}
+	redir / /listinfo permanent
 	handle {
-		respond 404
+		reverse_proxy 127.0.0.1:8888
 	}
+}
+
+stregsystemet.fklub.dk {
+	import site
+	redir https://stregsystem.fklub.dk{uri} permanent
 }
 
 # The allowlist is outside this repo, because it lists people's homes.
 # It might get completely removed in favour of a login. See the README.
-http://stregsystem.fklub.dk {
+stregsystem.fklub.dk {
+	import site
 	import /etc/caddy/stregsystem-allowlist.caddy
 	import login_message
 
@@ -209,6 +245,6 @@ http://stregsystem.fklub.dk {
 }
 
 # This moves to /srv when Stregsystem moves.
-http://api.stregsystem.fklub.dk {
+api.stregsystem.fklub.dk {
 	import static /data/stregsystem/openapi/out
 }

@@ -9,12 +9,12 @@ This repo is public, so it must never contain passwords, keys or member data.
 Every project is a systemd service, unless it needs software the OS can't provide. Then it runs in Docker with Compose.
 
 ```
-Internet -> Apache on 80/443 (TLS and certificates)
-              -> Caddy on 127.0.0.1:8080, for everything already migrated
-              -> the older services directly, until they move behind Caddy
+Internet -> Caddy on 80/443 (TLS and certificates)
+              -> a static folder, or a service on 127.0.0.1 or a unix socket
+              -> Apache on 127.0.0.1:8888, only for Mailman
 ```
 
-Apache stays in front on purpose, because that lets us move services to Caddy slowly, one at a time. Once nothing depends on Apache anymore, Caddy takes over 80/443 and Apache is removed.
+Apache only remains for Mailman 2's CGI scripts. It goes away once the lists have moved to Mailman 3.
 
 On the server, this repo is cloned to `/srv/infra`. Update it with `sudo git -C /srv/infra pull`.
 
@@ -46,7 +46,7 @@ sudo systemctl reload caddy
 
 ## Access from outside
 
-Stregsystem, Farcheology, `random` and phpMyAdmin need no login on the university network or the VPN. Everyone else gets a login from `/etc/caddy/users.caddy`, which is outside this repo.
+Stregsystem, Farcheology, `random` and phpMyAdmin need no login on the university network or the VPN. Everyone else gets a login from `/etc/caddy/users.caddy`, which is outside this repo. To add or remove a login, see [docs/logins.md](docs/logins.md).
 
 The wiki, the small static sites and Mailman are public.
 
@@ -58,5 +58,5 @@ Closed rooms are listed in `stregsystem_site` in `caddy/Caddyfile`. To open one 
 
 1. Put the files in `/srv/static/<site>/`.
 2. Add a block to `caddy/Caddyfile` and commit it.
-3. On the server, pull this repo, then run `sudo systemctl reload caddy`.
-4. Add the hostname to `ServerAlias` in Apache's `staging.conf`, add it to the certificate, and reload Apache.
+3. Point the hostname's DNS at the server. Caddy gets the certificate by itself.
+4. On the server, pull this repo, then run `sudo systemctl reload caddy`.

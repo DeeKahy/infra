@@ -135,9 +135,11 @@ http://stregsystem.fklub.dk {
 		header Content-Type "text/plain; charset=utf-8"
 		respond "Stregsystemet kan kun bruges fra AAU-netværket eller VPN.
 Hvis du er på AAU-netværket med en iPhone, så slå Privat relæ fra.
+Hvis noget andet er i stykker, så få fat i Lennart (Deekahy) og fortæl ham, hvad han har fucket op.
 
 Stregsystemet can only be used from the AAU network or the VPN.
-If you are on the AAU network with an iPhone, turn off Private Relay." 403
+If you are on the AAU network with an iPhone, turn off Private Relay.
+If something else is broken, get ahold of Lennart (Deekahy) and tell him what he fucked up." 403
 	}
 }
 

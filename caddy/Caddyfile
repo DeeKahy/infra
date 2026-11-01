@@ -124,13 +124,26 @@ http://random.fklub.dk {
 	}
 }
 
+# No login on the university network or VPN, because random and the info screens need the gallery.
+# Everyone else needs the login. The password hash is outside this repo.
 http://farcheology.fklub.dk {
 	import uni_network
 	handle @uni_network {
 		reverse_proxy 127.0.0.1:8093
 	}
 	handle {
-		import denied
+		basic_auth bcrypt "Farcheology" {
+			import /etc/caddy/farcheology-users.caddy
+		}
+		reverse_proxy 127.0.0.1:8093
+	}
+	handle_errors 401 {
+		header Content-Type "text/plain; charset=utf-8"
+		respond "Farcheology kræver et login uden for AAU-netværket og VPN.
+Hvis du har brug for adgang, så tal med en ansvarlig for at få et login.
+
+Farcheology needs a login outside the AAU network and the VPN.
+If you need access, talk to someone responsible to get a login." 401
 	}
 }
 

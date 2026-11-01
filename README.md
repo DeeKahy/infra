@@ -53,6 +53,12 @@ To let an address in, uncomment or add its `client_ip` line, then run `sudo syst
 
 Closed rooms are listed in the Stregsystem block in `caddy/Caddyfile`. To open one for an occasion, remove it from that list and reload Caddy.
 
+## Piwigo access
+
+Piwigo needs no login on the university network or the VPN. Everyone else gets a login, and the hash is in `/etc/caddy/farcheology-users.caddy`, outside this repo.
+
+To change the password, run `caddy hash-password`, replace the hash in that file, then run `sudo systemctl reload caddy`.
+
 ## Add a static site
 
 1. Put the files in `/srv/static/<site>/`.

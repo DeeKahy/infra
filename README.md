@@ -46,7 +46,7 @@ sudo systemctl reload caddy
 
 ## Access from outside
 
-Stregsystem, Farcheology, `random` and phpMyAdmin need no login on the university network or the VPN. Everyone else gets a login from `/etc/caddy/users.caddy`, which is outside this repo. To add or remove a login, see [docs/logins.md](docs/logins.md).
+Stregsystem, Farcheology, `random` and phpMyAdmin need no login on the university network or the VPN. Everyone else gets a login from `/etc/caddy/users.caddy`, which is outside this repo.
 
 The wiki, the small static sites and Mailman are public.
 

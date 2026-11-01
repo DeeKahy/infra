@@ -124,6 +124,16 @@ http://random.fklub.dk {
 	}
 }
 
+http://farcheology.fklub.dk {
+	import uni_network
+	handle @uni_network {
+		reverse_proxy 127.0.0.1:8093
+	}
+	handle {
+		import denied
+	}
+}
+
 # The allowlist is outside this repo, because it lists people's homes. See the README.
 http://stregsystem.fklub.dk {
 	import /etc/caddy/stregsystem-allowlist.caddy

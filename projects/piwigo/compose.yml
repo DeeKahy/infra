@@ -1,0 +1,13 @@
+services:
+  piwigo:
+    build: .
+    image: fklub-piwigo:16.4.0-php8.5.12
+    container_name: piwigo
+    restart: unless-stopped
+    # Stay on the default bridge. A new network could pick a subnet that clashes with the AAU network.
+    network_mode: bridge
+    ports:
+      - "127.0.0.1:8093:80"
+    volumes:
+      - /srv/piwigo:/var/www/html
+      - /var/run/mysqld:/var/run/mysqld

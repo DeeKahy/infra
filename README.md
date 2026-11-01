@@ -49,6 +49,8 @@ Stregsystem is only open to the university network and the VPN. The list is in `
 
 To let an address in, uncomment or add its `client_ip` line, then run `sudo systemctl reload caddy`.
 
+`random` uses the shared `uni_network` rule in `caddy/Caddyfile`, which has no home addresses.
+
 Closed rooms are listed in the Stregsystem block in `caddy/Caddyfile`. To open one for an occasion, remove it from that list and reload Caddy.
 
 ## Add a static site

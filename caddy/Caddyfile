@@ -14,6 +14,22 @@
 	}
 }
 
+# University network and VPN. The public ranges are registered to Aalborg University in RIPE.
+(uni_network) {
+	@uni_network client_ip 10.0.0.0/8 172.16.0.0/12 130.225.192.0/21 130.225.48.0/20 192.38.48.0/20 2001:878:300::/44
+}
+
+(denied) {
+	header Content-Type "text/plain; charset=utf-8"
+	respond "Denne side kan kun bruges fra AAU-netværket eller VPN.
+Hvis du er på AAU-netværket med en iPhone, så slå Privat relæ fra.
+Hvis noget andet er i stykker, så få fat i Lennart (Deekahy) og fortæl ham, hvad han har fucket op.
+
+This page can only be used from the AAU network or the VPN.
+If you are on the AAU network with an iPhone, turn off Private Relay.
+If something else is broken, get ahold of Lennart (Deekahy) and tell him what he fucked up." 403
+}
+
 (static) {
 	root * {args[0]}
 	file_server {
@@ -98,10 +114,14 @@ http://coffee.fklub.dk {
 	import static /srv/coffee/generator/html
 }
 
-# Apache keeps the IP allowlist for this one.
 http://random.fklub.dk {
-	reverse_proxy 127.0.0.1:8092
-	log
+	import uni_network
+	handle @uni_network {
+		reverse_proxy 127.0.0.1:8092
+	}
+	handle {
+		import denied
+	}
 }
 
 # The allowlist is outside this repo, because it lists people's homes. See the README.
@@ -132,14 +152,7 @@ http://stregsystem.fklub.dk {
 	}
 
 	handle {
-		header Content-Type "text/plain; charset=utf-8"
-		respond "Stregsystemet kan kun bruges fra AAU-netværket eller VPN.
-Hvis du er på AAU-netværket med en iPhone, så slå Privat relæ fra.
-Hvis noget andet er i stykker, så få fat i Lennart (Deekahy) og fortæl ham, hvad han har fucket op.
-
-Stregsystemet can only be used from the AAU network or the VPN.
-If you are on the AAU network with an iPhone, turn off Private Relay.
-If something else is broken, get ahold of Lennart (Deekahy) and tell him what he fucked up." 403
+		import denied
 	}
 }
 

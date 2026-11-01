@@ -4,9 +4,13 @@
 	auto_https off
 	http_port {$CADDY_PORT:8080}
 	default_bind 127.0.0.1
+	# Only Caddy and root can open this socket, so other local users cannot change the config.
+	admin unix//run/caddy/admin.sock
 	servers {
 		# Apache is in front, so believe what it says about the visitor.
 		trusted_proxies static 127.0.0.1/32 ::1
+		# Use the address Apache adds, not one the visitor made up. Stregsystem allowlist depends on this.
+		trusted_proxies_strict
 	}
 }
 
@@ -98,6 +102,38 @@ http://coffee.fklub.dk {
 http://random.fklub.dk {
 	reverse_proxy 127.0.0.1:8092
 	log
+}
+
+# The allowlist is outside this repo, because it lists people's homes. See the README.
+http://stregsystem.fklub.dk {
+	import /etc/caddy/stregsystem-allowlist.caddy
+
+	handle @stregsystem_allowed {
+		# Closed rooms go to the main room. To open one for an occasion, remove it from this list.
+		@closed_rooms path_regexp ^/(1|2|3|5|6|7|8|9|11|15|16)(/.*)?$
+		redir @closed_rooms /10/
+
+		handle_path /static/* {
+			root * /data/stregsystem/static
+			file_server
+		}
+		handle_path /media/* {
+			root * /data/stregsystem/media
+			# Kiosk images change, so browsers must not cache them.
+			@images path *.png *.jpg
+			header @images Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
+			file_server {
+				hide .htaccess
+			}
+		}
+		handle {
+			reverse_proxy unix//run/stregsystem.sock
+		}
+	}
+
+	handle {
+		respond 403
+	}
 }
 
 # This moves to /srv when Stregsystem moves.

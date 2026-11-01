@@ -8,6 +8,7 @@ Wants=network-online.target
 Type=notify
 User=caddy
 Group=caddy
+SupplementaryGroups=www-data
 Environment=XDG_DATA_HOME=/var/lib/caddy XDG_CONFIG_HOME=/var/lib/caddy
 ExecStart=/usr/local/bin/caddy run --config /srv/infra/caddy/Caddyfile --adapter caddyfile
 ExecReload=/usr/local/bin/caddy reload --config /srv/infra/caddy/Caddyfile --adapter caddyfile
@@ -15,7 +16,9 @@ Restart=on-failure
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
-ReadWritePaths=/var/lib/caddy
+ReadWritePaths=/var/lib/caddy /run/caddy
+RuntimeDirectory=caddy
+RuntimeDirectoryMode=0700
 
 [Install]
 WantedBy=multi-user.target

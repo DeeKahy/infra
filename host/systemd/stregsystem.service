@@ -1,0 +1,22 @@
+[Unit]
+Description=Stregsystemet
+Requires=stregsystem.socket
+After=network.target
+
+[Service]
+#Type=notify
+# the specific user that our service will run as
+User=stregsystem
+Group=stregsystem
+RuntimeDirectory=stregsystem
+WorkingDirectory=/data/stregsystem
+ExecStart=/data/stregsystem/venv/bin/gunicorn --bind unix:/run/stregsystem.sock treo.wsgi
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
